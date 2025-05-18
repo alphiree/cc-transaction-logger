@@ -28,7 +28,7 @@ Currently supported merchants:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/cc-transaction-logger-v2.git
+   git clone https://github.com/alphiree/cc-transaction-logger.git
    cd cc-transaction-logger-v2
    ```
 

@@ -1,5 +1,7 @@
 # Credit Card Transaction Logger v2
 
+![README Banner](banner.png)
+
 A Python application that automatically logs credit card transactions by extracting data from notification emails and storing them in Google Sheets.
 
 ## Table of Contents
@@ -17,24 +19,28 @@ A Python application that automatically logs credit card transactions by extract
 This project automatically extracts credit card transaction information from emails sent by supported merchants/banks and logs them into a Google Sheet. It uses Gmail API to read emails and Google Sheets API to maintain a transaction log, making it easier to track and manage credit card expenses.
 
 Currently supported merchants:
+
 - Grab
 - Metrobank
 
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/yourusername/cc-transaction-logger-v2.git
    cd cc-transaction-logger-v2
    ```
 
 2. Install dependencies using `uv`:
+
    ```bash
    # Install uv if you don't have it
    pip install uv # or folllow the installation process here: https://docs.astral.sh/uv/getting-started/installation/
    ```
 
 3. Set up Google Sheets API credentials:
+
    - Go to the [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project
    - Enable the Google Sheets API and Google Drive API
@@ -52,6 +58,7 @@ uv run main.py
 ```
 
 The script will:
+
 1. Connect to Gmail using the provided credentials
 2. Search for transaction emails from configured merchants
 3. Extract transaction details (card number, amount, merchant)
@@ -80,6 +87,7 @@ LAST_RUNTIME=YYYY-MM-DD HH:MM:SS
 ```
 
 Notes:
+
 - `GMAIL_APP_PASSWORD`: Create an app-specific password in your Google Account settings
 - `GOOGLE_SHEET_ID`: The ID from your Google Sheet URL
 - `STATEMENT_DAY`: The day of the month when your credit card statement is generated
@@ -98,6 +106,7 @@ The project consists of the following main components:
   - `metrobank.py`: Metrobank transaction email extractor
 
 The workflow:
+
 1. Connect to Gmail using IMAP
 2. Fetch emails from specified merchants within a date range
 3. Extract transaction data (card number, amount, merchant) using pattern matching

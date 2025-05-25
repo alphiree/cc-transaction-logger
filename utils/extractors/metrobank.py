@@ -42,5 +42,6 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
                     )
                     / 100
                 )
-
             return last_four_digits, total_paid_amount, merchant
+        else:
+            return 0, 0, 0

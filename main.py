@@ -46,6 +46,8 @@ def main():
 
     if dfs:
         df = pd.concat(dfs)
+        df = df.sort_values(by="date", ascending=True)
+        print(df)
 
         # Upload transactions to Google Sheets
         print("Creating logger sheet...")

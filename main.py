@@ -73,7 +73,6 @@ def main():
         df = pd.concat(dfs)
         df = df.sort_values(by="date", ascending=True)
         print(df)
-        return None
 
         # Upload transactions to Google Sheets
         print("Creating logger sheet...")

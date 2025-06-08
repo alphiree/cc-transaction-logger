@@ -1,4 +1,4 @@
-from utils.extractors.base import BaseEmailExtractor
+from utils.extractors.base import BaseEmailExtractor, TransactionData
 
 
 class MetrobankEmailExtractor(BaseEmailExtractor):
@@ -13,35 +13,49 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
         self.start_str = start_str
         self.end_str = end_str
         self.str_to_find = str_to_find
+        self.register_extractors()
 
-    def extract_payment_info(
+    def register_extractors(self) -> None:
+        """Register the specific extractors for Metrobank emails"""
+        # HTML extractors - Metrobank typically doesn't use HTML emails
+        self.html_extractors = {}
+
+        # Text extractors
+        self.text_extractors = {
+            "Transaction Notification": self._extract_transaction_notification,
+            # Add more notification types here in the future
+        }
+
+    def _extract_transaction_notification(
         self, text: str, subject: str | None = None
-    ) -> tuple[str | None, float | None, str | None]:
-        if subject == "Transaction Notification":
-            start_index = text.find(self.str_to_find) + len(self.str_to_find)
-            if start_index != -1:
-                last_four_digits = text[start_index : start_index + 4]
+    ) -> TransactionData:
+        """Extract data from Transaction Notification emails"""
+        last_four_digits = None
+        merchant = None
+        total_paid_amount = None
 
-            # Find indexes of start and end
-            start_index = text.find(self.start_str) + len(self.start_str)
-            end_index = text.find(self.end_str)
-            if start_index != -1 and end_index != -1:
-                merchant = text[start_index:end_index].strip()
+        # Extract card number
+        start_index = text.find(self.str_to_find)
+        if start_index != -1:
+            start_index += len(self.str_to_find)
+            last_four_digits = text[start_index : start_index + 4]
 
-            self.str_to_find = self.end_str
-            start_index = text.find(self.str_to_find) + len(self.str_to_find)
-            if start_index != -1:
-                total_paid_amount = (
-                    float(
-                        "".join(
-                            filter(
-                                lambda x: x.isdigit(),
-                                text[start_index : start_index + 10],
-                            )
-                        )
-                    )
-                    / 100
-                )
-            return last_four_digits, total_paid_amount, merchant
-        else:
-            return 0, 0, 0
+        # Extract merchant
+        start_index = text.find(self.start_str)
+        end_index = text.find(self.end_str)
+        if start_index != -1 and end_index != -1:
+            start_index += len(self.start_str)
+            merchant = text[start_index:end_index].strip()
+
+        # Extract amount
+        start_index = text.find(self.end_str)
+        if start_index != -1:
+            start_index += len(self.end_str)
+            amount_text = text[start_index : start_index + 10]
+            amount_digits = "".join(filter(lambda x: x.isdigit(), amount_text))
+            if amount_digits:
+                total_paid_amount = float(amount_digits) / 100
+
+        return TransactionData(
+            card_number=last_four_digits, amount=total_paid_amount, merchant=merchant
+        )

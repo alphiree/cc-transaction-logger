@@ -122,15 +122,36 @@ class Gmail:
 
                     # Prefer plain text, fall back to HTML if plain text is not available
                     if text_content:
-                        email_info["body"] = text_content.decode()
+                        try:
+                            email_info["body"] = text_content.decode(
+                                "utf-8", errors="replace"
+                            )
+                        except Exception:
+                            email_info["body"] = text_content.decode(
+                                "latin-1", errors="replace"
+                            )
                     elif html_content:
-                        email_info["body"] = html_content.decode()
+                        try:
+                            email_info["body"] = html_content.decode(
+                                "utf-8", errors="replace"
+                            )
+                        except Exception:
+                            email_info["body"] = html_content.decode(
+                                "latin-1", errors="replace"
+                            )
                 else:
                     # Handle non-multipart messages
                     content_type = email_message.get_content_type()
                     payload = email_message.get_payload(decode=True)
                     if payload:
-                        email_info["body"] = payload.decode()
+                        try:
+                            email_info["body"] = payload.decode(
+                                "utf-8", errors="replace"
+                            )
+                        except Exception:
+                            email_info["body"] = payload.decode(
+                                "latin-1", errors="replace"
+                            )
 
                 email_list.append(email_info)
 

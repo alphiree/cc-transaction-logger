@@ -6,18 +6,6 @@ from utils.extractors.base import BaseEmailExtractor, TransactionData
 
 
 class FoodpandaEmailExtractor(BaseEmailExtractor):
-    """
-    Template extractor class to use as a reference when implementing new merchant extractors.
-
-    Steps to create a new extractor:
-    1. Copy this file and rename it to your merchant (e.g., amazon_extractor.py)
-    2. Rename the class to match your merchant (e.g., AmazonExtractor)
-    3. Update the merchant_email parameter in __init__
-    4. Implement your specific extraction methods
-    5. Register your extraction methods in register_extractors()
-    6. Add your extractor to the EXTRACTOR_REGISTRY in __init__.py
-    """
-
     def __init__(self, merchant_email: str = "info@mail.foodpanda.ph"):
         """
         Initialize the FoodPanda extractor with the merchant's email address.

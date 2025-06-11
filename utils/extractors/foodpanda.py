@@ -48,28 +48,45 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
             # Extract total amount - first try to find it in the HTML structure
             amount = None
 
-            # Look for the Order Total row in the table
-            order_total_elements = soup.find_all(text=lambda t: "Order Total" in t)
-            for element in order_total_elements:
-                # Get the parent element and then find the amount
-                parent = element.parent
+            # IMPROVED: Be more specific about finding the Order Total (not Subtotal)
+            # Look specifically for "Order Total" followed by a price
+            order_total_text = None
+            for text in soup.find_all(text=True):
+                if "Order Total" in text:
+                    order_total_text = text
+                    break
+
+            if order_total_text:
+                # Get the parent element
+                parent = order_total_text.parent
                 if parent:
-                    # Try to find the amount in nearby elements
-                    amount_text = parent.find_next(text=lambda t: "₱" in str(t))
-                    if amount_text:
-                        # Extract the numeric value
-                        amount_match = re.search(r"₱\s*([0-9,.]+)", str(amount_text))
-                        if amount_match:
-                            # Convert to float, removing commas
-                            amount = float(amount_match.group(1).replace(",", ""))
+                    # Look for the next element with price information
+                    price_regex = re.compile(r"₱\s*([0-9,.]+)")
+
+                    # Search in the next few siblings or nearby elements
+                    next_elements = []
+                    next_sibling = parent.next_sibling
+                    for _ in range(5):  # Check next 5 elements
+                        if next_sibling:
+                            next_elements.append(next_sibling)
+                            next_sibling = next_sibling.next_sibling
+
+                    # Search for price in next elements
+                    for elem in next_elements:
+                        price_match = price_regex.search(str(elem))
+                        if price_match:
+                            amount = float(price_match.group(1).replace(",", ""))
                             break
 
-            # If not found in the structure, try searching the entire HTML
+            # If still not found, try a broader search in the entire email
             if not amount:
-                # Look for pattern like "Order Total ₱803.00"
-                amount_match = re.search(r"Order\s+Total\s*₱\s*([0-9,.]+)", str(soup))
-                if amount_match:
-                    amount = float(amount_match.group(1).replace(",", ""))
+                # Look for "Order Total" followed by price in the same line or nearby
+                matches = re.findall(
+                    r"Order\s+Total\s*[\s\n]*₱\s*([0-9,.]+)", str(soup), re.DOTALL
+                )
+                if matches:
+                    # Use the last match if multiple are found (usually the correct one)
+                    amount = float(matches[-1].replace(",", ""))
 
             # Extract restaurant name (merchant)
             restaurant = None

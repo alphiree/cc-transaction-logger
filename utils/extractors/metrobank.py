@@ -29,7 +29,10 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
     def _extract_transaction_notification(
         self, text: str, subject: str | None = None
     ) -> TransactionData:
-        """Extract data from Transaction Notification emails"""
+        """Extract data from Transaction Notification emails from the standard transactions"""
+        if subject != "Transaction Notification":
+            return TransactionData()
+
         last_four_digits = None
         merchant = None
         total_paid_amount = None
@@ -59,3 +62,9 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
         return TransactionData(
             card_number=last_four_digits, amount=total_paid_amount, merchant=merchant
         )
+
+    def _extract_transaction_notification_for_appbills(
+        self, text: str, subject: str | None = None
+    ) -> TransactionData:
+        """Extract data from Transaction Notification emails from the billing transactions"""
+        return TransactionData()

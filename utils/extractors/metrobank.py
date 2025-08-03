@@ -59,9 +59,16 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
             if amount_digits:
                 total_paid_amount = float(amount_digits) / 100
 
-        return TransactionData(
-            card_number=last_four_digits, amount=total_paid_amount, merchant=merchant
-        )
+        if total_paid_amount:
+            return TransactionData(
+                card_number=last_four_digits,
+                amount=total_paid_amount,
+                merchant=merchant,
+            )
+        else:
+            return TransactionData(
+                card_number=last_four_digits, amount=0, merchant="Invalid"
+            )
 
     def _extract_transaction_notification_for_appbills(
         self, text: str, subject: str | None = None

@@ -22,6 +22,7 @@ Currently supported merchants:
 
 - Grab
 - Metrobank
+- Foodpanda
 
 ## Installation
 
@@ -64,6 +65,42 @@ The script will:
 3. Extract transaction details (card number, amount, merchant)
 4. Log the transactions to a Google Sheet
 5. Update the last runtime in the `.env` file
+
+### Testing Email Extractors
+
+To test individual email extractors without running the full application:
+
+```bash
+# Test a specific merchant extractor with emails from the last 3 days
+uv run python test_extractor.py <merchant>
+
+# Test with a custom date range (e.g., last 7 days)
+uv run python test_extractor.py <merchant> 7
+```
+
+Examples:
+```bash
+# Test Foodpanda extractor
+uv run python test_extractor.py Foodpanda
+
+# Test Grab extractor with emails from last 7 days  
+uv run python test_extractor.py Grab 7
+
+# Test Metrobank extractor with emails from last 14 days
+uv run python test_extractor.py Metrobank 14
+```
+
+This will:
+1. Fetch real emails from your Gmail account for the specified merchant
+2. Test the extractor on each email
+3. Show detailed results including success/failure for each extraction
+4. Provide a summary of extraction performance
+
+Use this tool when:
+- Adding support for a new merchant
+- Debugging extraction issues
+- Verifying that extractors work with new email formats
+- Testing after making changes to extractor logic
 
 ## Configuration
 

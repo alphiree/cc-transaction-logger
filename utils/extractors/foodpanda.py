@@ -18,13 +18,16 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
         Register specific extractors for FoodPanda emails.
         """
         # Register HTML extractors - only process order confirmation emails
+        # Handle both with and without period in subject
         self.html_extractors = {
             "Your order has been placed": self._extract_order_confirmation_html,
+            "Your order has been placed.": self._extract_order_confirmation_html,
         }
 
         # For text emails, we'll convert them to HTML and use the same extractor
         self.text_extractors = {
             "Your order has been placed": self._extract_from_text_wrapper,
+            "Your order has been placed.": self._extract_from_text_wrapper,
         }
 
     def _extract_order_confirmation_html(
@@ -40,8 +43,8 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
         Returns:
             TransactionData with extracted information
         """
-        # Verify subject
-        if subject != "Your order has been placed":
+        # Verify subject (handle both with and without period)
+        if subject not in ["Your order has been placed", "Your order has been placed."]:
             return TransactionData()
 
         try:
@@ -51,7 +54,7 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
             # IMPROVED: Be more specific about finding the Order Total (not Subtotal)
             # Look specifically for "Order Total" followed by a price
             order_total_text = None
-            for text in soup.find_all(text=True):
+            for text in soup.find_all(string=True):
                 if "Order Total" in text:
                     order_total_text = text
                     break
@@ -81,17 +84,28 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
             # If still not found, try a broader search in the entire email
             if not amount:
                 # Look for "Order Total" followed by price in the same line or nearby
+                # Handle new format where they might be on separate lines
                 matches = re.findall(
                     r"Order\s+Total\s*[\s\n]*₱\s*([0-9,.]+)", str(soup), re.DOTALL
                 )
                 if matches:
                     # Use the last match if multiple are found (usually the correct one)
                     amount = float(matches[-1].replace(",", ""))
+                else:
+                    # Try alternate pattern where Order Total and amount are on separate lines
+                    # Look for "Order Total" followed by "₱" and then the amount
+                    order_total_pattern = re.search(
+                        r"Order\s+Total[\s\n]*₱[\s\n]*([0-9,.]+)", str(soup), re.DOTALL
+                    )
+                    if order_total_pattern:
+                        amount = float(order_total_pattern.group(1).replace(",", ""))
 
             # Extract restaurant name (merchant)
             restaurant = None
+            
+            # Try the original pattern first
             restaurant_text = soup.find(
-                text=lambda t: "from" in str(t) and "will be on its way" in str(t)
+                string=lambda t: t and "from" in str(t) and "will be on its way" in str(t)
             )
             if restaurant_text:
                 restaurant_match = re.search(
@@ -99,6 +113,14 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
                 )
                 if restaurant_match:
                     restaurant = restaurant_match.group(1)
+            
+            # If not found, try new pattern: "Your order from [Restaurant] has been placed"
+            if not restaurant:
+                restaurant_pattern = re.search(
+                    r"Your order from\s+(.+?)\s+has been placed", str(soup), re.DOTALL
+                )
+                if restaurant_pattern:
+                    restaurant = restaurant_pattern.group(1).strip()
 
             # If restaurant name not found, use FoodPanda as default
             if not restaurant:

@@ -1,6 +1,11 @@
+import os
 import re
 
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 from utils.extractors.base import BaseEmailExtractor, TransactionData
 
@@ -11,6 +16,9 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
         Initialize the FoodPanda extractor with the merchant's email address.
         """
         super().__init__(merchant_email)
+        ## Food panda does not provide card number in the email. So set the card number to what you use in payments
+        self.card_number = os.getenv("CARD_USED_FOR_FPND")
+
         self.register_extractors()
 
     def register_extractors(self) -> None:
@@ -102,10 +110,12 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
 
             # Extract restaurant name (merchant)
             restaurant = None
-            
+
             # Try the original pattern first
             restaurant_text = soup.find(
-                string=lambda t: t and "from" in str(t) and "will be on its way" in str(t)
+                string=lambda t: t
+                and "from" in str(t)
+                and "will be on its way" in str(t)
             )
             if restaurant_text:
                 restaurant_match = re.search(
@@ -113,7 +123,7 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
                 )
                 if restaurant_match:
                     restaurant = restaurant_match.group(1)
-            
+
             # If not found, try new pattern: "Your order from [Restaurant] has been placed"
             if not restaurant:
                 restaurant_pattern = re.search(
@@ -128,10 +138,10 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
 
             # We don't have card number in FoodPanda emails typically
             # Using a placeholder format for consistency
-            card_number = "FPND"  # FoodPanda doesn't provide card details
+            # card_number = "FPND"  # FoodPanda doesn't provide card details
 
             return TransactionData(
-                card_number=card_number, amount=amount, merchant=restaurant
+                card_number=self.card_number, amount=amount, merchant=restaurant
             )
 
         except Exception as e:

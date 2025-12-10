@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from dotenv import load_dotenv
 
+from cards import CreditCardName
 from utils import update_env_file
 from utils.extractors import TransactionExtractor, get_extractor_for_merchant
 from utils.gmail import Gmail
@@ -11,26 +12,20 @@ from utils.googlesheets import SheetManager
 
 load_dotenv()
 
-MERCHANTS = [
-    # Accepted merchants can be found in utils/extractors/__init__.py
-    "Grab",
-    "Metrobank",
-    "Foodpanda",
-]
+cc_init = CreditCardName()
 
 
 def main():
-    # Initialize clients
     gmail_client = Gmail(os.getenv("GMAIL_EMAIL"), os.getenv("GMAIL_APP_PASSWORD"))
     sheet_client = SheetManager(os.getenv("GOOGLE_SHEET_CREDS_PATH"))
 
-    # Initialize transaction extractor
     transaction_extractor = TransactionExtractor()
 
     print("Hello from cc-transaction-logger-v2!")
+    print(f"Running extractor for {cc_init.NICKNAME}")
 
     # Determine time range for fetching emails
-    last_runtime = os.getenv("LAST_RUNTIME", None)
+    last_runtime = os.getenv(cc_init.LAST_RUN_TIME_ENV_NAME, None)
     if last_runtime:
         start_date = datetime.strptime(last_runtime, "%Y-%m-%d %H:%M:%S")
     else:
@@ -41,7 +36,7 @@ def main():
     dfs = []
 
     # Process each merchant
-    for merchant in MERCHANTS:
+    for merchant in cc_init.MERCHANTS:
         print(f"Fetching emails from {merchant}...")
 
         # Get the extractor to determine the merchant's email address
@@ -72,13 +67,14 @@ def main():
     if dfs:
         df = pd.concat(dfs)
         df = df.sort_values(by="date", ascending=True)
+        df = df[df["card_number"].astype(str) == cc_init.LAST_DIGITS]
         print(df)
 
         # Upload transactions to Google Sheets
         print("Creating logger sheet...")
         worksheet = sheet_client.create_logger_sheet(
-            spreadsheet_id=os.getenv("GOOGLE_SHEET_ID"),
-            statement_day=int(os.getenv("STATEMENT_DAY")),
+            spreadsheet_id=cc_init.GOOGLE_SHEET_ID,
+            statement_day=int(cc_init.STATEMENT_DATE),
         )
         print("Uploading transactions to Google Sheets...")
         sheet_client.update_logger_sheet(
@@ -91,7 +87,9 @@ def main():
         print("No transactions found, skipping upload to Google Sheets")
 
     # Update last runtime
-    update_env_file("LAST_RUNTIME", end_date.strftime("%Y-%m-%d %H:%M:%S"))
+    update_env_file(
+        cc_init.LAST_RUN_TIME_ENV_NAME, end_date.strftime("%Y-%m-%d %H:%M:%S")
+    )
 
 
 if __name__ == "__main__":

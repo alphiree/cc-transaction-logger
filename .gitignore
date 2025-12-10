@@ -7,6 +7,10 @@ sheet-credentials.json
 last_runtime.txt
 # for removing credential related files
 *.json
+# removing cc_ functions for multiple credit cards usage
+/cc_*
+/cards/cards.py
+
 
 # C extensions
 *.so

@@ -56,7 +56,7 @@ class SheetManager:
                 year = datetime.now().year
                 month = month - 1
 
-        WORKSHEET_NAME = f"{year}{str(month).zfill(2)}09"
+        WORKSHEET_NAME = f"{year}{str(month).zfill(2)}{str(statement_day).zfill(2)}"
         print(f"WORKSHEET_NAME: {WORKSHEET_NAME}")
 
         try:

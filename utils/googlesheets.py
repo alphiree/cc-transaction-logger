@@ -38,6 +38,7 @@ class SheetManager:
 
     def create_logger_sheet(
         self,
+        prefix: str,
         spreadsheet_id: str,
         statement_day: int,
     ) -> gspread.Worksheet:
@@ -56,7 +57,9 @@ class SheetManager:
                 year = datetime.now().year
                 month = month - 1
 
-        WORKSHEET_NAME = f"{year}{str(month).zfill(2)}{str(statement_day).zfill(2)}"
+        WORKSHEET_NAME = (
+            f"{prefix}_{year}{str(month).zfill(2)}{str(statement_day).zfill(2)}"
+        )
         print(f"WORKSHEET_NAME: {WORKSHEET_NAME}")
 
         try:
@@ -79,13 +82,24 @@ class SheetManager:
                 "date",
                 "card_number",
                 "total_amount",
+                "posted",
                 "merchant",
                 "payer",
                 "",
                 "",
             ]
             worksheet.update([headers])
-            worksheet_widths = [75, 150, 100, 100, 250, 100, 15, 100]
+            worksheet_widths = [
+                75,
+                150,
+                100,
+                100,
+                75,
+                250,
+                100,
+                15,
+                100,
+            ]
             request_widths = [
                 {
                     "updateDimensionProperties": {
@@ -174,6 +188,7 @@ class SheetManager:
                     row["date"].strftime("%Y-%m-%d %H:%M:%S"),
                     row["card_number"],
                     row["total_paid_amount"],
+                    False,
                     row["merchant"],
                     payer_users[0],
                     "",
@@ -189,10 +204,12 @@ class SheetManager:
 
             # Resize if necessary
             if current_rows < needed_rows:
-                worksheet.resize(rows=needed_rows, cols=8)
+                worksheet.resize(
+                    rows=needed_rows, cols=9
+                )  # update this if you will add a column
 
             # Get current data to find the last row with content
-            values_list = worksheet.col_values(5)  # Column E (merchant column)
+            values_list = worksheet.col_values(6)  # Column F (merchant column)
             last_row = len(
                 [x for x in values_list if x.strip() != ""]
             )  # Count non-empty values
@@ -202,6 +219,7 @@ class SheetManager:
             worksheet.update(start_range, data)
 
             set_data_validation_for_cell_range(worksheet, "A2:A1000", checkbox_rule)
-            set_data_validation_for_cell_range(worksheet, "F2:F1000", validation_rule)
+            set_data_validation_for_cell_range(worksheet, "E2:E1000", checkbox_rule)
+            set_data_validation_for_cell_range(worksheet, "G2:G1000", validation_rule)
 
         print(f"Successfully uploaded {len(df)} transactions to Google Sheets")

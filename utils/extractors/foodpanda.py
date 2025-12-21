@@ -18,6 +18,7 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
         super().__init__(merchant_email)
         ## Food panda does not provide card number in the email. So set the card number to what you use in payments
         self.card_number = os.getenv("CARD_USED_FOR_FPND")
+        self.merchant_category = "Food & Dining"
 
         self.register_extractors()
 
@@ -141,7 +142,10 @@ class FoodpandaEmailExtractor(BaseEmailExtractor):
             # card_number = "FPND"  # FoodPanda doesn't provide card details
 
             return TransactionData(
-                card_number=self.card_number, amount=amount, merchant=restaurant
+                card_number=self.card_number,
+                amount=amount,
+                merchant=restaurant,
+                category=self.merchant_category,
             )
 
         except Exception as e:

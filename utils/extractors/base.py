@@ -10,14 +10,14 @@ class TransactionData:
     card_number: Optional[str] = None
     amount: Optional[float] = None
     merchant: Optional[str] = None
+    category: Optional[str] = None
     # You can easily add more fields here in the future
-    # category: Optional[str] = None
     # timestamp: Optional[datetime] = None
     # location: Optional[str] = None
 
     def to_tuple(self):
         """Convert to tuple format for backward compatibility"""
-        return (self.card_number, self.amount, self.merchant)
+        return (self.card_number, self.amount, self.merchant, self.category)
 
 
 class BaseEmailExtractor(ABC):

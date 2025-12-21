@@ -7,6 +7,7 @@ class GrabEmailExtractor(BaseEmailExtractor):
     def __init__(self, merchant_email: str = "no-reply@grab.com"):
         super().__init__(merchant_email)
         self.register_extractors()
+        self.merchant_category = None  # hardcoded on functions
 
     def register_extractors(self) -> None:
         """Register the specific extractors for Grab emails"""
@@ -49,7 +50,10 @@ class GrabEmailExtractor(BaseEmailExtractor):
         )
 
         return TransactionData(
-            card_number=last_four_digits, amount=total_paid_amount, merchant="GrabFood"
+            card_number=last_four_digits,
+            amount=total_paid_amount,
+            merchant="GrabFood",
+            category="Food & Dining",
         )
 
     def _extract_grabride(
@@ -75,5 +79,8 @@ class GrabEmailExtractor(BaseEmailExtractor):
         )
 
         return TransactionData(
-            card_number=last_four_digits, amount=total_paid_amount, merchant="GrabRide"
+            card_number=last_four_digits,
+            amount=total_paid_amount,
+            merchant="GrabRide",
+            category="Transportation",
         )

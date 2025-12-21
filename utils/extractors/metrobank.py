@@ -14,6 +14,7 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
         self.end_str = end_str
         self.str_to_find = str_to_find
         self.register_extractors()
+        self.merchant_category = None
 
     def register_extractors(self) -> None:
         """Register the specific extractors for Metrobank emails"""
@@ -65,10 +66,14 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
                 card_number=last_four_digits,
                 amount=total_paid_amount,
                 merchant=merchant,
+                category=self.merchant_category,
             )
         else:
             return TransactionData(
-                card_number=last_four_digits, amount=0, merchant="Invalid"
+                card_number=last_four_digits,
+                amount=0,
+                merchant="Invalid",
+                category=self.merchant_category,
             )
 
     def _extract_transaction_notification_for_appbills(
@@ -88,27 +93,29 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
 
         try:
             # Extract card number (last 4 digits)
-            card_match = re.search(r'ending in (\d{4})', text)
+            card_match = re.search(r"ending in (\d{4})", text)
             card_number = card_match.group(1) if card_match else None
 
             # Extract amount - look for "PHP 1699.00" pattern
-            amount_match = re.search(r'PHP\s*([0-9,.]+)', text)
+            amount_match = re.search(r"PHP\s*([0-9,.]+)", text)
             amount = None
             if amount_match:
-                amount_str = amount_match.group(1).replace(',', '').rstrip('.')
+                amount_str = amount_match.group(1).replace(",", "").rstrip(".")
                 amount = float(amount_str)
 
             # Extract merchant - look for PayBills transactions specifically
             merchant = None
-            if 'PayBills' in text or 'paybills' in text.lower():
+            if "PayBills" in text or "paybills" in text.lower():
                 merchant = "pay bills option"
             else:
                 # Fallback: extract text between "for your" and "transaction"
-                merchant_match = re.search(r'for your\s+(.+?)\s+transaction', text, re.IGNORECASE)
+                merchant_match = re.search(
+                    r"for your\s+(.+?)\s+transaction", text, re.IGNORECASE
+                )
                 if merchant_match:
                     merchant_text = merchant_match.group(1).strip()
                     # If it contains PayBills, simplify to "pay bills option"
-                    if 'PayBills' in merchant_text:
+                    if "PayBills" in merchant_text:
                         merchant = "pay bills option"
                     else:
                         merchant = merchant_text
@@ -116,7 +123,8 @@ class MetrobankEmailExtractor(BaseEmailExtractor):
             return TransactionData(
                 card_number=card_number,
                 amount=amount,
-                merchant=merchant
+                merchant=merchant,
+                category="Housing & Utilities",
             )
 
         except Exception as e:

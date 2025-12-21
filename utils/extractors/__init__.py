@@ -85,6 +85,7 @@ class TransactionExtractor:
                     "card_number": transaction_data.card_number,
                     "total_paid_amount": transaction_data.amount,
                     "merchant": transaction_data.merchant,
+                    "category": transaction_data.category,
                 }
                 transaction_data_list.append(transaction_dict)
 

@@ -25,6 +25,7 @@ class TemplateExtractor(BaseEmailExtractor):
         """
         super().__init__(merchant_email)
         self.register_extractors()
+        self.merchant_category = None
 
     def register_extractors(self) -> None:
         """

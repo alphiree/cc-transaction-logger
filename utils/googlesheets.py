@@ -13,6 +13,22 @@ from gspread_formatting import (
 
 load_dotenv()
 
+categories: list = [
+    "Groceries",
+    "Food & Dining",
+    "Transportation",
+    "Travel",
+    "Housing & Utilities",
+    "Home Improvement & Maintenance",
+    "Shopping & Personal",
+    "Health & Wellness",
+    "Entertainment & Leisure",
+    "Gifts & Donations",
+    "Education & Professional",
+    "Financial & Fees",
+    "Miscellaneous",
+]
+
 
 class SheetManager:
     def __init__(self, credentials_path: str):
@@ -71,8 +87,8 @@ class SheetManager:
             worksheets = sheet.worksheets()
 
             # Reorder worksheets to move the new sheet to the 2nd position
-            new_order = [worksheets[0], worksheet] + worksheets[
-                1:
+            new_order = [worksheets[0], worksheets[1], worksheet] + worksheets[
+                2:
             ]  # Insert new sheet at 2nd place
             new_order.pop(-1)
             sheet.reorder_worksheets(new_order)
@@ -84,6 +100,7 @@ class SheetManager:
                 "total_amount",
                 "posted",
                 "merchant",
+                "category",
                 "payer",
                 "",
                 "",
@@ -95,6 +112,7 @@ class SheetManager:
                 100,
                 100,
                 75,
+                250,
                 250,
                 100,
                 15,
@@ -173,6 +191,10 @@ class SheetManager:
             BooleanCondition("ONE_OF_LIST", payer_users),
             showCustomUi=True,  # Shows the dropdown arrow
         )
+        category_validation_rule = DataValidationRule(
+            BooleanCondition("ONE_OF_LIST", categories),
+            showCustomUi=True,  # Shows the dropdown arrow
+        )
 
         # Prepare the data
         data = []
@@ -190,6 +212,7 @@ class SheetManager:
                     row["total_paid_amount"],
                     False,
                     row["merchant"],
+                    row["category"],
                     payer_users[0],
                     "",
                 ]
@@ -205,7 +228,7 @@ class SheetManager:
             # Resize if necessary
             if current_rows < needed_rows:
                 worksheet.resize(
-                    rows=needed_rows, cols=9
+                    rows=needed_rows, cols=10
                 )  # update this if you will add a column
 
             # Get current data to find the last row with content
@@ -220,6 +243,9 @@ class SheetManager:
 
             set_data_validation_for_cell_range(worksheet, "A2:A1000", checkbox_rule)
             set_data_validation_for_cell_range(worksheet, "E2:E1000", checkbox_rule)
-            set_data_validation_for_cell_range(worksheet, "G2:G1000", validation_rule)
+            set_data_validation_for_cell_range(
+                worksheet, "G2:G1000", category_validation_rule
+            )
+            set_data_validation_for_cell_range(worksheet, "H2:H1000", validation_rule)
 
         print(f"Successfully uploaded {len(df)} transactions to Google Sheets")

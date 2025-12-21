@@ -13,17 +13,21 @@ class GreenGSMEmailExtractor(BaseEmailExtractor):
     def __init__(self, merchant_email: str = "noreply@2c2p.com"):
         super().__init__(merchant_email)
         self.register_extractors()
+        self.merchant_category = "Transportation"
 
     def register_extractors(self) -> None:
         # The subject always starts with "RECEIPT FOR YOUR PAYMENT"
         self.html_extractors = {
-            r"RECEIPT FOR YOUR PAYMENT": self._extract_payment_html,
+            "RECEIPT FOR YOUR PAYMENT TO GREEN AND SMART MOBILITY PHILIPPINES INC.": self._extract_payment_html,
         }
 
     def _extract_payment_html(
         self, soup: BeautifulSoup, subject: str | None = None
     ) -> TransactionData:
         try:
+            if "GREEN AND SMART MOBILITY" not in subject:
+                return TransactionData()
+
             text = soup.get_text(" ", strip=True)
 
             # --- Extract Amount ---
@@ -48,6 +52,7 @@ class GreenGSMEmailExtractor(BaseEmailExtractor):
                 card_number=card_number,
                 amount=amount,
                 merchant=merchant,
+                category=self.merchant_category,
             )
 
         except Exception as e:

@@ -73,6 +73,7 @@ def main():
         # Upload transactions to Google Sheets
         print("Creating logger sheet...")
         worksheet = sheet_client.create_logger_sheet(
+            prefix=cc_init.PREFIX,
             spreadsheet_id=cc_init.GOOGLE_SHEET_ID,
             statement_day=int(cc_init.STATEMENT_DATE),
         )

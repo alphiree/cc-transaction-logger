@@ -4,8 +4,8 @@ from utils.extractors.base import TransactionData
 
 from .foodpanda import FoodpandaEmailExtractor
 from .grab import GrabEmailExtractor
-from .greengsm import GreenGSMEmailExtractor
 from .metrobank import MetrobankEmailExtractor
+from .twoc2p import Generic2C2PEmailExtractor
 
 # Registry of available extractors
 # To add a new extractor:
@@ -16,7 +16,7 @@ EXTRACTOR_REGISTRY = {
     "Grab": GrabEmailExtractor(),
     "Metrobank": MetrobankEmailExtractor(),
     "Foodpanda": FoodpandaEmailExtractor(),
-    "GreenGSM": GreenGSMEmailExtractor(),
+    "2C2P": Generic2C2PEmailExtractor(),
     # "YourNewMerchant": YourNewMerchantExtractor(),
 }
 

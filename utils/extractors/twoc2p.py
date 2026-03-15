@@ -5,42 +5,40 @@ from bs4 import BeautifulSoup
 from utils.extractors.base import BaseEmailExtractor, TransactionData
 
 
-class GreenGSMEmailExtractor(BaseEmailExtractor):
+class Generic2C2PEmailExtractor(BaseEmailExtractor):
     """
-    Extractor for 2C2P payment receipts for GREEN AND SMART MOBILITY PHILIPPINES INC.
+    Extractor for generic 2C2P payment receipts.
+    Handles any payment made through 2C2P payment gateway.
     """
 
     def __init__(self, merchant_email: str = "noreply@2c2p.com"):
         super().__init__(merchant_email)
         self.register_extractors()
-        self.merchant_category = "Transportation"
+        self.merchant_category = None
 
     def register_extractors(self) -> None:
-        # The subject always starts with "RECEIPT FOR YOUR PAYMENT"
         self.html_extractors = {
-            "RECEIPT FOR YOUR PAYMENT TO GREEN AND SMART MOBILITY PHILIPPINES INC.": self._extract_payment_html,
+            "RECEIPT FOR YOUR PAYMENT": self._extract_payment_html,
         }
 
     def _extract_payment_html(
         self, soup: BeautifulSoup, subject: str | None = None
     ) -> TransactionData:
         try:
-            if "GREEN AND SMART MOBILITY" not in subject:
-                return TransactionData()
-
             text = soup.get_text(" ", strip=True)
 
-            # --- Extract Amount ---
-            amount_match = re.search(r"([0-9]+\.[0-9]{2})\s*PHP", text)
-            amount = float(amount_match.group(1)) if amount_match else None
-
-            # --- Extract Merchant ---
-            merchant_match = re.search(
-                r"payment of [0-9.]+\s*PHP to (.+?)\.", text, re.IGNORECASE
+            amount_match = re.search(r"([0-9,]+\.[0-9]{2})\s*PHP", text)
+            amount_str = (
+                amount_match.group(1).replace(",", "") if amount_match else None
             )
-            merchant = merchant_match.group(1).strip() if merchant_match else None
+            amount = float(amount_str) if amount_str else None
 
-            # --- Extract Card Number ---
+            if subject:
+                merchant_match = re.search(r"RECEIPT FOR YOUR PAYMENT TO (.+)", subject)
+                merchant = merchant_match.group(1).strip() if merchant_match else None
+            else:
+                merchant = None
+
             card_match = re.search(
                 r"Paid via:\s*(?:MasterCard|Visa|AMEX|JCB)\s+[0-9X]+([0-9]{4})",
                 text,
@@ -56,5 +54,5 @@ class GreenGSMEmailExtractor(BaseEmailExtractor):
             )
 
         except Exception as e:
-            print(f"Error extracting GreenSmart transaction: {e}")
+            print(f"Error extracting 2C2P transaction: {e}")
             return TransactionData()

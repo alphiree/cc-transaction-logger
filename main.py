@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from cards import CreditCardName
 from utils import update_env_file
 from utils.extractors import TransactionExtractor, get_extractor_for_merchant
-from utils.gmail import Gmail
+from utils.gmail import Gmail, GmailReadError
 from utils.googlesheets import SheetManager
 
 load_dotenv()
@@ -43,9 +43,13 @@ def main():
         extractor = get_extractor_for_merchant(merchant)
 
         # Step 1: Fetch emails directly using the Gmail client
-        emails = gmail_client.read_emails_filtered(
-            sender=extractor.merchant_email, date_interval=date_interval, limit=10
-        )
+        try:
+            emails = gmail_client.read_emails_filtered(
+                sender=extractor.merchant_email, date_interval=date_interval, limit=10
+            )
+        except GmailReadError as e:
+            print(str(e))
+            raise SystemExit(1) from e
 
         if emails:
             print(f"Found {len(emails)} emails for {merchant}")

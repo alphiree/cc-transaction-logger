@@ -9,6 +9,10 @@ from typing import Dict, List, Union
 import pytz
 
 
+class GmailReadError(Exception):
+    """Raised when Gmail email retrieval fails."""
+
+
 class Gmail:
     def __init__(
         self, email_address: str, password: str, test_connection: bool = False
@@ -161,8 +165,7 @@ class Gmail:
             return email_list
 
         except Exception as e:
-            print(f"Error reading emails: {str(e)}")
-            return []
+            raise GmailReadError(f"Error reading emails: {str(e)}") from e
 
     def read_emails_filtered(
         self,
